@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TaskList from './components/TaskList.js';
 import './App.css';
+import axios from 'axios'
 
 
 const TASKS = [
@@ -18,30 +19,44 @@ const TASKS = [
 
 const App = () => {
   const [tasks, setTasks] = useState(TASKS)
-  const toggleComplete = (id) => {
-    const newTasks = tasks.map(task =>{
-      if (id === task.id) {
-       return {
-          ...task, 
-          isComplete: !task.isComplete}
-      }
-      return {
-        ...task
+  useEffect(() => {
+    axios.get('http://localhost:5000/tasks').then(response => {
+    console.log("in then", response.data) 
 
-      }
+    setTasks(response.data)
     })
-    setTasks(newTasks)
+    .catch(error => {console.log("in error",error.response.data)})
+  },[])
+
+  const toggleComplete = (id) => {
+    axios.patch(`http://localhost:5000/tasks/${id}/mark_complete`)
+    .then(response => {
+      const newTasks = tasks.map(task =>{
+        if (id === task.id) {
+          return {
+            ...task, 
+            isComplete: !task.isComplete}
+          }
+        return {
+          ...task
+        }
+      });
+      setTasks(newTasks) 
+    })
   }
   const deleteTask = (id) => {
-    const newTasks = tasks.map(task => {
-      if (id === task.id) {
-        return {}
-      }
-      return {
-        ...task
-      }
+    axios.delete(`http://localhost:5000/tasks/${id}`)
+    .then(response => {
+      const newTasks = tasks.map(task =>{
+        if (id === task.id) {
+          return {}
+        }
+        return {
+          ...task
+        }
+      });
+      setTasks(newTasks) 
     })
-    setTasks(newTasks)
   }
   return (
     <div className="App">
